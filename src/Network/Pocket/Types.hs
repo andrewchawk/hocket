@@ -78,7 +78,7 @@ module Network.Pocket.Types (
 import           Control.Applicative (empty, Alternative)
 import           Control.Lens (view, (^.))
 import           Control.Lens.TH
-import           Control.Monad (mzero)
+import           Control.Monad (mzero, liftM2)
 import           Control.Monad.Trans.Reader (ReaderT, runReaderT)
 import           Data.Aeson
 import           Data.Aeson.Types (Parser)
@@ -294,8 +294,10 @@ subredditAndArticleId item = if isRedditUrl rurl
 newtype RedditCommentCount = RedditCommentCount  Integer deriving (Show, Eq)
 
 isRedditUrl :: URL -> Bool
-isRedditUrl (URL url) = prefix `isInfixOf` url
-  where prefix = "reddit.com/r/"
+isRedditUrl (URL url) = any (`isPrefixOf` url) prefixes
+  where
+    base = "reddit.com/r/"
+    prefixes = liftM2 (++) ["https://", "http://"] [base, "www." ++ base]
 
 extractSubreddit :: URL -> Maybe String
 extractSubreddit (URL url) = if length splits /= 9
